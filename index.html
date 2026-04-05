@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParcelGo — Smart Crowd Delivery</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ════════ NAVBAR ════════ -->
+<nav class="navbar">
+  <a class="brand" href="#" onclick="showPage('home')">
+    <div class="brand-icon">📦</div>
+    <div class="brand-name">Parcel<span>Go</span></div>
+  </a>
+  <div class="nav-links">
+    <button class="nav-link active" data-page="home"   onclick="showPage('home')">Home</button>
+    <button class="nav-link"        data-page="send"   onclick="showPage('send')">Send Parcel</button>
+    <button class="nav-link"        data-page="travel" onclick="showPage('travel')">I'm Traveling</button>
+    <button class="nav-link"        data-page="track"  onclick="showPage('track')">Track</button>
+    <span id="nav-user-name" style="font-size:13px;font-weight:600;color:var(--muted);padding:0 8px"></span>
+    <button id="nav-login-btn"  class="btn-nav"                              onclick="showAuthModal('login')">Login / Register</button>
+    <button id="nav-logout-btn" class="btn-nav" style="display:none;background:var(--muted)" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<!-- ════════ HOME ════════ -->
+<div id="page-home" class="page active">
+  <div class="hero-section">
+    <h1>Ship Smarter.<br><em>Travel Together.</em></h1>
+    <p>Connect your parcel with travelers already heading your way — faster, cheaper, and greener than traditional couriers.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showPage('send')">📦 Send a Parcel</button>
+      <button class="btn-outline" onclick="showPage('travel')">🚗 I'm Traveling</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num" id="stat-deliveries">0</div><div class="stat-lbl">Deliveries Done</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-savings">0%</div><div class="stat-lbl">Cost Savings</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-travelers">0</div><div class="stat-lbl">Active Travelers</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-rating">—</div><div class="stat-lbl">Avg Rating</div></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="feature-icon orange">🧠</div>
+      <div class="feature-title">Smart Vehicle Matching</div>
+      <div class="feature-desc">Auto-assigns Bike, Car, Van, or Truck based on parcel weight and size. Always the right vehicle.</div>
+    </div>
+    <div class="card">
+      <div class="feature-icon green">🛣️</div>
+      <div class="feature-title">Route Optimization</div>
+      <div class="feature-desc">Matches travelers whose journeys align with your delivery path — minimal detours, maximum efficiency.</div>
+    </div>
+    <div class="card">
+      <div class="feature-icon yellow">🔐</div>
+      <div class="feature-title">Verified & Rated</div>
+      <div class="feature-desc">Mobile OTP login, traveler ID verification, community ratings and real-time tracking.</div>
+    </div>
+  </div>
+
+  <div class="eco-banner">
+    <div style="font-size:48px">🌍</div>
+    <div class="eco-text">
+      <h2>Greener Deliveries, Brighter Future</h2>
+      <p>By utilizing vehicles already on the road, ParcelGo dramatically reduces carbon emissions compared to dedicated courier fleets.</p>
+    </div>
+    <div class="eco-stats">
+      <div class="stat-item"><div class="eco-stat-num">62%</div><div class="eco-stat-lbl">Less CO₂</div></div>
+      <div class="stat-item"><div class="eco-stat-num">40%</div><div class="eco-stat-lbl">Cost Saved</div></div>
+      <div class="stat-item"><div class="eco-stat-num">3×</div><div class="eco-stat-lbl">Faster</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SEND PARCEL ════════ -->
+<div id="page-send" class="page">
+  <h2 style="font-family:'Playfair Display',serif;font-size:32px;margin-bottom:6px">Send a Parcel</h2>
+  <p style="color:var(--muted);margin-bottom:24px">Fill in parcel details — we'll find the best traveler for your route.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon">📦</div>Parcel Details</div>
+      <div id="parcel-alert" class="alert"></div>
+
+      <form id="parcel-form" onsubmit="submitParcel(event)">
+        <div class="form-group">
+          <label>Pickup Location *</label>
+          <input type="text" id="pickup" placeholder="e.g.  No.1 Tolgate, Trichy" required>
+        </div>
+        <div class="form-group">
+          <label>Drop Location *</label>
+          <input type="text" id="drop" placeholder="e.g. Madurai Railway Station" required>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Weight (kg) *</label>
+            <input type="number" id="weight" placeholder="e.g. 2.5" min="0.1" step="0.1"
+                   oninput="autoSelectVehicle()" required>
+          </div>
+          <div class="form-group">
+            <label>Size *</label>
+            <select id="size" onchange="autoSelectVehicle()" required>
+              <option value="">Select size</option>
+              <option value="small">Small (shoe box)</option>
+              <option value="medium">Medium (suitcase)</option>
+              <option value="large">Large (furniture)</option>
+              <option value="bulk">Bulk / Industrial</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Parcel Type</label>
+          <select id="ptype">
+            <option value="general">General Items</option>
+            <option value="fragile">Fragile / Glass</option>
+            <option value="perishable">Perishable / Food</option>
+            <option value="documents">Documents</option>
+            <option value="electronics">Electronics</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Special Instructions (optional)</label>
+          <textarea id="description" placeholder="Handle with care, call before delivery..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Recommended Vehicle</label>
+          <div id="rec-badge" style="display:none;margin-bottom:8px;font-size:11px;font-weight:700;
+            color:var(--primary);background:var(--primary-pale);padding:4px 12px;border-radius:20px;display:inline-block">
+            ✨ AUTO-SELECTED FOR YOUR PARCEL
+          </div>
+          <div class="vehicle-grid">
+            <div class="vehicle-btn" onclick="selectVehicle(this,'bike')" data-v="bike">
+              <span class="vehicle-emoji">🛵</span><div class="vehicle-label">BIKE</div><div class="vehicle-cap">≤ 5 kg</div>
+            </div>
+            <div class="vehicle-btn" onclick="selectVehicle(this,'car')" data-v="car">
+              <span class="vehicle-emoji">🚗</span><div class="vehicle-label">CAR</div><div class="vehicle-cap">≤ 25 kg</div>
+            </div>
+            <div class="vehicle-btn" onclick="selectVehicle(this,'van')" data-v="van">
+              <span class="vehicle-emoji">🚐</span><div class="vehicle-label">VAN</div><div class="vehicle-cap">≤ 200 kg</div>
+            </div>
+            <div class="vehicle-btn" onclick="selectVehicle(this,'truck')" data-v="truck">
+              <span class="vehicle-emoji">🚛</span><div class="vehicle-label">TRUCK</div><div class="vehicle-cap">1000 kg+</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="price-estimate" class="cost-box" style="display:none"></div>
+
+        <button type="submit" class="btn-full" id="btn-send-parcel" style="margin-top:16px">
+          🚀 Find Travelers on This Route
+        </button>
+      </form>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title"><div class="card-title-icon">ℹ️</div>How It Works</div>
+        <div class="tracking-timeline">
+          <div class="t-step"><div class="t-dot done"></div><div>
+            <div class="t-step-title done">1. Book Your Parcel</div>
+            <div class="t-step-sub">Enter pickup, drop & parcel details</div></div></div>
+          <div class="t-step"><div class="t-dot done"></div><div>
+            <div class="t-step-title done">2. Auto Vehicle Match</div>
+            <div class="t-step-sub">System picks Bike / Car / Van / Truck</div></div></div>
+          <div class="t-step"><div class="t-dot done"></div><div>
+            <div class="t-step-title done">3. Traveler Matched</div>
+            <div class="t-step-sub">Verified traveler on your route accepts</div></div></div>
+          <div class="t-step"><div class="t-dot active"></div><div>
+            <div class="t-step-title active">4. Live Tracking</div>
+            <div class="t-step-sub">Track your parcel in real-time</div></div></div>
+          <div class="t-step"><div class="t-dot"></div><div>
+            <div class="t-step-title pending">5. OTP Delivery Confirm</div>
+            <div class="t-step-sub">Receiver confirms with secure OTP</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><div class="card-title-icon">🛡️</div>Safety & Security</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px"><span>📱</span><div><b>Mobile OTP Verification</b><div style="font-size:12px;color:var(--muted)">All users verified via OTP</div></div></div>
+          <div style="display:flex;gap:10px"><span>⭐</span><div><b>Community Ratings</b><div style="font-size:12px;color:var(--muted)">Senders & travelers rate each other</div></div></div>
+          <div style="display:flex;gap:10px"><span>🔐</span><div><b>OTP-Based Delivery</b><div style="font-size:12px;color:var(--muted)">Receiver confirms with secret OTP</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TRAVELER ════════ -->
+<div id="page-travel" class="page">
+  <h2 style="font-family:'Playfair Display',serif;font-size:32px;margin-bottom:6px">I'm Traveling</h2>
+  <p style="color:var(--muted);margin-bottom:24px">Post your trip and earn by delivering parcels along your route.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon">🚗</div>Post Your Trip</div>
+      <div id="trip-alert" class="alert"></div>
+      <form id="trip-form" onsubmit="submitTrip(event)">
+        <div class="form-group">
+          <label>From (Start Location) *</label>
+          <input type="text" id="trip-from" placeholder="e.g. Chennai" required>
+        </div>
+        <div class="form-group">
+          <label>To (Destination) *</label>
+          <input type="text" id="trip-to" placeholder="e.g. Madurai" required>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Vehicle Type *</label>
+            <select id="trip-vehicle" required>
+              <option value="">Select</option>
+              <option value="bike">🛵 Bike</option>
+              <option value="car">🚗 Car</option>
+              <option value="van">🚐 Van</option>
+              <option value="truck">🚛 Truck</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vehicle Number</label>
+            <input type="text" id="trip-vehicle-no" placeholder="TN XX AB 1234">
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Departure Date & Time *</label>
+            <input type="datetime-local" id="trip-time" required>
+          </div>
+          <div class="form-group">
+            <label>Available Capacity (kg)</label>
+            <input type="number" id="trip-capacity" value="10" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Max Parcels to Accept</label>
+          <select id="trip-max-parcels">
+            <option value="1">1 parcel</option>
+            <option value="2">2 parcels</option>
+            <option value="3" selected>3 parcels</option>
+            <option value="5">5 parcels</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-full" id="btn-post-trip">🚀 Post My Trip</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><div class="card-title-icon">💰</div>Earning Potential</div>
+      <div style="background:var(--secondary-pale);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+        <div style="font-size:40px;font-weight:900;color:var(--secondary);font-family:'Playfair Display',serif">₹500+</div>
+        <div style="font-size:13px;color:var(--secondary)">Avg earnings per trip</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--muted)">Bike (city)</span><span style="font-weight:700">₹80–150 / parcel</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;color:var(--muted)">Car (intercity)</span><span style="font-weight:700">₹150–400 / parcel</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0">
+          <span style="font-size:13px;color:var(--muted)">Van / Truck (bulk)</span><span style="font-weight:700">₹400–1500 / trip</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TRACK ════════ -->
+<div id="page-track" class="page">
+  <h2 style="font-family:'Playfair Display',serif;font-size:32px;margin-bottom:6px">Track Your Parcel</h2>
+  <p style="color:var(--muted);margin-bottom:24px">Enter your tracking ID to see real-time delivery status.</p>
+
+  <div class="card" style="max-width:580px">
+    <div class="card-title"><div class="card-title-icon">📍</div>Enter Tracking ID</div>
+    <div style="display:flex;gap:10px">
+      <input type="text" id="track-input" placeholder="e.g. PG-AB12CD34" style="flex:1;text-transform:uppercase"
+             onkeypress="if(event.key==='Enter') trackParcel()">
+      <button class="btn-primary" id="btn-track" onclick="trackParcel()" style="white-space:nowrap;padding:12px 20px">
+        🔍 Track
+      </button>
+    </div>
+  </div>
+  <div id="tracking-result"></div>
+</div>
+
+<!-- ════════ AUTH MODAL ════════ -->
+<div class="modal-overlay" id="auth-modal" onclick="if(event.target===this) closeModal('auth-modal')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('auth-modal')">✕</button>
+    <div class="modal-title" id="auth-modal-title">🔐 Login</div>
+    <div class="modal-sub"   id="auth-modal-sub">Enter your mobile number to continue</div>
+    <div id="auth-alert" class="alert"></div>
+
+    <!-- Step 1 -->
+    <div id="auth-step-1">
+      <div id="auth-name-group" class="form-group" style="display:none">
+        <label>Full Name *</label>
+        <input type="text" id="auth-name" placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label>Mobile Number *</label>
+        <input type="tel" id="auth-mobile" placeholder="9876543210"
+               onkeypress="if(event.key==='Enter') sendOTP()">
+      </div>
+      <button class="btn-full" id="btn-send-otp" onclick="sendOTP()">Send OTP →</button>
+      <button class="btn-secondary" onclick="showAuthModal(otpPurpose==='login'?'register':'login')">
+        New user? Register here
+      </button>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="auth-step-2" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:3px">OTP sent to</p>
+      <p style="font-size:15px;font-weight:700;margin-bottom:4px" id="otp-mobile-display"></p>
+      <p style="font-size:11px;color:var(--primary);margin-bottom:16px">
+        📄 Check <b>otp_log.txt</b> in your project folder for OTP
+      </p>
+      <div class="otp-inputs">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric">
+        <input class="otp-input" type="text" maxlength="1" inputmode="numeric">
+      </div>
+      <button class="btn-full" id="btn-verify-otp" onclick="verifyOTP()">Verify & Login ✅</button>
+      <button class="btn-secondary" onclick="document.getElementById('auth-step-1').style.display='block';
+        document.getElementById('auth-step-2').style.display='none'">← Change Number</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TOAST ════════ -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
